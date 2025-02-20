@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # API Gateway (Exposé)
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"  # Seul le gateway est exposé
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      - auth-service
+      - menu-service
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5000
+      - MENU_SERVICE_URL=http://menu-service:4001
+    restart: always
+    networks:
+      - goodfood
+
+  # Auth Service (Interne)
+  auth-service:
+    build: ./auth-service
+    restart: always
+    env_file:
+      - ./auth-service/.env
+    depends_on:
+      - auth-db
+    networks:
+      - goodfood
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: auth-db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth_db
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+      - ./auth-service/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - goodfood
+
+  # auth-db:
+  #   image: mongo:5.0
+  #   container_name: auth-db
+  #   volumes:
+  #     - auth_db_data:/data/db
+  #   restart: always
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=admin
+  #     - MONGO_INITDB_ROOT_PASSWORD=password
+  #     - MONGO_INITDB_USERNAME=user
+  #     - MONGO_INITDB_PASSWORD=password
+  #     - MONGO_INITDB_DATABASE=auth_db
+  #     - MONGO_INITDB_COLLECTION=users
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 50s
+  #   networks:
+  #     - goodfood
+
+  #########################
+  # Menu Service (Interne)
+  #########################
+  menu-service:
+    build: ./menu-service
+    restart: always
+    environment:
+      - MONGO_URI_MENU=mongodb://admin:secret@menu-db:27017/menu-db?authSource=admin
+    env_file:
+      - ./menu-service/.env
+    depends_on:
+      - menu-db
+    networks:
+      - goodfood
+
+  menu-db:
+    image: mongo:5.0
+    container_name: menu-db
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=menu-db
+    volumes:
+      - menu_db_data:/data/db
+    networks:
+      - goodfood
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secret
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: secret
+      ME_CONFIG_MONGODB_URL: mongodb://admin:secret@menu-db:27017/
+    depends_on:
+      - menu-db
+    networks:
+      - goodfood
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    ports:
+      - 8081:8080
+    environment:
+      ADMINER_DEFAULT_SERVER: auth-db
+    networks:
+      - goodfood
+    depends_on:
+      - auth-db
+
+volumes:
+  auth_postgres_data:
+  menu_db_data:
+
+networks:
+  goodfood:
+    driver: bridge
