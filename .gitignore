@@ -1,10 +1,10 @@
 .env
 docker-compose.override.yml
 
-auth-service/Keys/jwtprivate.pem
+/auth-service/Keys/jwtprivate.pem
 
-auth-service/node_modules/
-menu-service/node_modules
-api-gateway/node_modules
+/auth-service/node_modules/
+/menu-service/node_modules
+/api-gateway/node_modules
 
-Keys/ # This is a directory
+/Keys/ # This is a directory
