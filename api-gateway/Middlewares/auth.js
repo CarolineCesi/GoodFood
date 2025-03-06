@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Charger la clé publique pour vérifier le JWT
-const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '../Keys/jwtpublic.pem'), 'utf8');
+const PUBLIC_KEY = fs.readFileSync(path.resolve('./Keys/jwtpublic.pem'), 'utf8');
 
 const verifyJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;

@@ -1,5 +1,5 @@
 import express from 'express';
-import { menuController } from './Controllers/menuController.js';
+import { menuController } from './Controller/menuController.js';
 import mongoose from 'mongoose';
 
 const app = express();
