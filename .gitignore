@@ -1,7 +1,6 @@
 .env
 docker-compose.override.yml
 
-auth-service/Keys/jwtprivate.pem
 
 auth-service/node_modules/
 menu-service/node_modules
