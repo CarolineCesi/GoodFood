@@ -1,8 +1,6 @@
 import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-// import jwt from 'jsonwebtoken';
-// import fs from 'fs';
-// import path from 'path';
+import verifyJWT from './Middlewares/auth.js';
 
 const app = express();
 
@@ -11,17 +9,7 @@ const MENU_SERVICE_URL = process.env.MENU_SERVICE_URL;
 
 app.use('/auth', createProxyMiddleware({ target: AUTH_SERVICE_URL, changeOrigin: true }));
 
-
-// Vérification des droits sur les routes protégées
-// const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '../Keys/jwtpublic.pem'));
-// const decodeToken = jwt.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] }, (err, decoded) => {
-//                 if (err) {
-//                     return res.status(401).json({ message: 'Invalid token' });
-//                 }
-//             });
-
-
-app.use('/menu', createProxyMiddleware({ target: MENU_SERVICE_URL, changeOrigin: true }));
+app.use('/menu', verifyJWT , createProxyMiddleware({ target: MENU_SERVICE_URL, changeOrigin: true }));
 
 app.get('/', (req, res) => {
   res.send('API Gateway is running !');
